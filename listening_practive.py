@@ -70,11 +70,12 @@ def exitMessage(root,event=None):
         root.destroy()
 
 def removeBlank(l):
-    for i in range(len(l)-1):
+    result = []
+    for i in range(len(l)):
         (a1,a2) = l[i]
-        if (a1 == a2):
-            l.pop(i)
-    return l
+        if (a1 != a2):
+            result.append((a1,a2))
+    return result
 
 def textCom(a,b): # a is user input string  b is solution
     s = difflib.SequenceMatcher(lambda x: x in ",. \t", a.lower(),b.lower())
@@ -111,7 +112,7 @@ def initMainTextArea(root,editorFrame):
   #set up main text area
   textFrame = Frame(borderwidth=1, width=1400, relief="sunken")
 
-  root.solution = Text(background="white", width = 80, foreground = 'white', wrap = WORD,
+  root.solution = Text(background="white", width = 80, foreground = 'black', wrap = WORD,
                       borderwidth=1, highlightthickness=0, undo = True,
                       insertbackground = "white", state='disabled')
   root.text = Text(background="gray13", width = 90, foreground = 'white', wrap = WORD,
@@ -142,15 +143,17 @@ def initCheck(root, frame):
         my_input = root.text.get("1.0",'end-1c')
         my_input = my_input.replace("\n", " ").strip()
         global SOLUTION
-        print("Solutuon is")
-        print(SOLUTION)
-        diff = textCom(my_input,"Hello World")
-        print(diff)
+        diff = textCom(my_input,SOLUTION)
         root.solution.configure(state="normal")
-        root.solution.insert("1.0","""To Execute Your Script Press Command+B
-    To Check Your Style Press Command+D""")
+        root.solution.delete("0.0","end")
+        root.solution.insert("1.0",SOLUTION)
+        root.text.tag_config('highlight',foreground = 'red')
+        root.solution.tag_config('highlight', background = 'yellow')
+        for i in diff[0]: 
+            root.text.tag_add('highlight','1.{0}'.format(i[0]),'1.{0}'.format(i[1]))
+        for i in diff[1]:
+            root.solution.tag_add('highlight','1.{0}'.format(i[0]),'1.{0}'.format(i[1]))
         root.solution.configure(state="disabled")
-
         return
     checkbutton = Button(frame, text="CHECK", command= retrieve_input, padx = 700)
     checkbutton.pack(side = LEFT)
