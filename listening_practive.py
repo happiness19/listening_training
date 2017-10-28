@@ -21,11 +21,6 @@ paused = 0
 started = 0
 SOLUTION = None
 
-
-
-
-
-
 def findfile(event):
   result = askopenfilename(filetypes=[("Audio", "*.wav")],)
   global SOLUTION 
@@ -64,7 +59,7 @@ def replaysong(event):
 
 def exitMessage(root,event=None):
     if tkinter.messagebox.askokcancel("Are you sure you want to quit?",
-      "Make sure to save the snippets or script before exit."):
+      "Okay Bye."):
     # root.text.after_cancel(root.callback)
     # root.text.after_cancel(root.lineCallback)
         root.destroy()
@@ -86,7 +81,7 @@ def textCom(a,b): # a is user input string  b is solution
             l2.append((j1,j2))
     l1n = removeBlank(l1)
     l2n = removeBlank(l2)
-    return (l1n,l2n) # two lists of tuples
+    return ((l1n,l2n), s.ratio()) # two lists of tuples
 
 def initButtonBar(root, frame):
   inputbutton = Button(frame, text="Input", padx = 110)
@@ -143,10 +138,12 @@ def initCheck(root, frame):
         my_input = root.text.get("1.0",'end-1c')
         my_input = my_input.replace("\n", " ").strip()
         global SOLUTION
-        diff = textCom(my_input,SOLUTION)
+        diff, ratio = textCom(my_input,SOLUTION)
         root.solution.configure(state="normal")
         root.solution.delete("0.0","end")
         root.solution.insert("1.0",SOLUTION)
+        ratio *= 100
+        tkinter.messagebox.showinfo("Feedback", "Your score is %0.2f %%!" % ratio)
         root.text.tag_config('highlight',foreground = 'red')
         root.solution.tag_config('highlight', background = 'yellow')
         for i in diff[0]: 
