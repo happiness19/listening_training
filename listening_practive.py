@@ -1,5 +1,6 @@
 import os
 import pygame
+import difflib
 from tkinter import *
 import tkinter.messagebox,tkinter.filedialog
 from tkinter.filedialog import askopenfilename
@@ -20,11 +21,10 @@ paused = 0
 started = 0
 SOLUTION = None
 
-# def initMainTextArea(root, bottomFrame):
-#     #set up textbox
-#     root.textinput = Canvas(root,width=700,background='gray13')
-#     root.textinput.pack(in_=bottomFrame,side='left', fill='y')
-#     #end of line number area
+
+
+
+
 
 def findfile(event):
   result = askopenfilename(filetypes=[("Audio", "*.wav")],)
@@ -56,8 +56,11 @@ def stopsong(event):
 
 def replaysong(event):
   global started
+  global paused
   pygame.mixer.music.play()
   started = 1
+  paused = 0
+
 
 def exitMessage(root,event=None):
     if tkinter.messagebox.askokcancel("Are you sure you want to quit?",
@@ -65,6 +68,24 @@ def exitMessage(root,event=None):
     # root.text.after_cancel(root.callback)
     # root.text.after_cancel(root.lineCallback)
         root.destroy()
+
+def removeBlank(l):
+    for i in range(len(l)-1):
+        (a1,a2) = l[i]
+        if (a1 == a2):
+            l.pop(i)
+    return l
+
+def textCom(a,b): # a is user input string  b is solution
+    s = difflib.SequenceMatcher(lambda x: x in ",. \t", a.lower(),b.lower())
+    l1,l2 = list(), list()
+    for tag, i1, i2, j1, j2 in s.get_opcodes():
+        if (tag != "equal"):
+            l1.append((i1,i2))
+            l2.append((j1,j2))
+    l1n = removeBlank(l1)
+    l2n = removeBlank(l2)
+    return (l1n,l2n) # two lists of tuples
 
 def initButtonBar(root, frame):
   inputbutton = Button(frame, text="Input", padx = 110)
@@ -88,25 +109,30 @@ def initButtonBar(root, frame):
 
 def initMainTextArea(root,editorFrame):
   #set up main text area
-  textFrame_left = Frame(borderwidth=1, width=700, relief="sunken")
-  textFrame_right = Frame(borderwidth=1, width=700, relief="sunken")
-  root.text = Text(background="gray13", width = 90, foreground = 'white', wrap = "none",
+  textFrame = Frame(borderwidth=1, width=1400, relief="sunken")
+
+  root.solution = Text(background="white", width = 80, foreground = 'white', wrap = WORD,
+                      borderwidth=1, highlightthickness=0, undo = True,
+                      insertbackground = "white", state='disabled')
+  root.text = Text(background="gray13", width = 90, foreground = 'white', wrap = WORD,
                       borderwidth=1, highlightthickness=0, undo = True,
                       insertbackground = "white")
   #setting up scrollbars for the main text area
   root.vsb = Scrollbar(orient="vertical", borderwidth=1,
                           command=lambda *args: yview(root,*args))
   root.hsb = Scrollbar(orient="horizontal", borderwidth=1,
-                          command=root.text.xview)
+                            command=root.text.xview)
   root.text.configure(yscrollcommand=root.vsb.set)
   root.text.configure(xscrollcommand=root.hsb.set)
-  root.vsb.pack(in_=textFrame_right,side="right", fill="y", expand=False)
-  root.hsb.pack(in_=textFrame_right,side="bottom", fill="x", expand=False)
 
-  root.text.pack(in_=textFrame_right, side="right", fill="y", expand=False)
+  root.vsb.pack(in_=textFrame,side="right", fill="y", expand=False)
+  root.hsb.pack(in_=textFrame,side="bottom", fill="x", expand=False)
 
-  textFrame_left.pack(in_=editorFrame,side="left", fill="both", expand=True)
-  textFrame_right.pack(in_=editorFrame,side="right", fill="both", expand=True)
+
+  root.text.pack(in_=textFrame, side="right", fill="y", expand=False)
+  root.solution.pack(in_=textFrame, side = "left", fill="y", expand=False)
+
+  textFrame.pack(in_=editorFrame,side="right", fill="both", expand=True)
 
     
   #end of main text area
@@ -114,10 +140,17 @@ def initMainTextArea(root,editorFrame):
 def initCheck(root, frame):
     def retrieve_input():
         my_input = root.text.get("1.0",'end-1c')
-        print(my_input)
+        my_input = my_input.replace("\n", " ").strip()
         global SOLUTION
         print("Solutuon is")
         print(SOLUTION)
+        diff = textCom(my_input,"Hello World")
+        print(diff)
+        root.solution.configure(state="normal")
+        root.solution.insert("1.0","""To Execute Your Script Press Command+B
+    To Check Your Style Press Command+D""")
+        root.solution.configure(state="disabled")
+
         return
     checkbutton = Button(frame, text="CHECK", command= retrieve_input, padx = 700)
     checkbutton.pack(side = LEFT)
